@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Katalog Harga & Order</title>
+<style>
+  :root{
+    --bg:#12181b;
+    --panel:#1a2226;
+    --panel2:#212b30;
+    --line:#2b373c;
+    --ink:#eef3f2;
+    --ink-dim:#9fb0b3;
+    --accent:#ff8a3d;
+    --accent-dim:#c96a2e;
+    --good:#5fd08a;
+    --mono: "SF Mono", "Roboto Mono", Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height:100vh;
+  }
+  header{
+    padding:28px 20px 18px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, #171f22, #12181b);
+  }
+  header h1{
+    margin:0 0 4px;
+    font-size:22px;
+    letter-spacing:0.3px;
+  }
+  header h1 span{color:var(--accent);}
+  header p{margin:0;color:var(--ink-dim);font-size:13px;}
+
+  .tabs{
+    display:flex;
+    gap:4px;
+    padding:0 20px;
+    border-bottom:1px solid var(--line);
+    background:#12181b;
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  .tab{
+    padding:12px 18px;
+    cursor:pointer;
+    font-size:14px;
+    color:var(--ink-dim);
+    border-bottom:2px solid transparent;
+    user-select:none;
+  }
+  .tab.active{
+    color:var(--ink);
+    border-bottom-color:var(--accent);
+  }
+
+  main{max-width:1000px;margin:0 auto;padding:20px;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .toolbar{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  input, select, textarea{
+    background:var(--panel2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  input:focus, select:focus, textarea:focus{
+    outline:none;
+    border-color:var(--accent-dim);
+  }
+  #search{flex:1;min-width:180px;}
+
+  .kelompok-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--accent);
+    margin:22px 0 8px;
+    padding-top:4px;
+  }
+  .kelompok-label:first-child{margin-top:0;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{
+    text-align:left;
+    color:var(--ink-dim);
+    font-weight:600;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  td{
+    padding:9px 10px;
+    border-bottom:1px solid #1d2528;
+    vertical-align:middle;
+  }
+  tr.item-row:hover{background:#1c2529;}
+  .kode{color:var(--accent);font-family:var(--mono);font-size:12px;}
+  .nama{font-weight:500;}
+  .badge-new{
+    display:inline-block;
+    font-size:9px;
+    color:#1a2226;
+    background:var(--good);
+    padding:2px 6px;
+    border-radius:20px;
+    margin-left:6px;
+    font-weight:700;
+    letter-spacing:0.3px;
+  }
+  .harga{font-family:var(--mono);}
+  .harga-satuan{color:var(--ink-dim);font-family:var(--mono);font-size:12px;}
+  .isi{color:var(--ink-dim);text-align:center;}
+  .add-btn{
+    background:none;
+    border:1px solid var(--accent-dim);
+    color:var(--accent);
+    border-radius:6px;
+    width:28px;height:28px;
+    font-size:16px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .add-btn:hover{background:var(--accent);color:#1a2226;}
+
+  /* Order view */
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .card h3{margin:0 0 14px;font-size:14px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:0.5px;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .field{flex:1;min-width:160px;display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:12px;color:var(--ink-dim);}
+  .field input, .field select{width:100%;}
+
+  .item-picker{display:flex;gap:8px;margin-top:6px;}
+  .item-picker select{flex:2;}
+  .item-picker input{flex:1;max-width:100px;}
+  .item-picker button{
+    background:var(--accent);
+    border:none;
+    color:#1a2226;
+    font-weight:700;
+    border-radius:8px;
+    padding:0 16px;
+    cursor:pointer;
+  }
+
+  .order-list{list-style:none;margin:14px 0 0;padding:0;}
+  .order-list li{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 12px;
+    background:var(--panel2);
+    border-radius:8px;
+    margin-bottom:6px;
+    font-size:14px;
+  }
+  .order-list .oi-text{font-family:var(--mono);font-size:13px;}
+  .order-list button{
+    background:none;
+    border:none;
+    color:#e05d5d;
+    cursor:pointer;
+    font-size:14px;
+  }
+  .empty-note{color:var(--ink-dim);font-size:13px;padding:10px 0;}
+
+  .output-box{
+    background:#0c1113;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px;
+    font-family:var(--mono);
+    font-size:13px;
+    white-space:pre-wrap;
+    line-height:1.6;
+    color:#d7e6e2;
+    min-height:120px;
+  }
+  .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+  .btn{
+    border:none;
+    border-radius:8px;
+    padding:10px 16px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--accent);color:#1a2226;}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
+  .btn-ghost:hover{border-color:var(--accent-dim);}
+  .copied-msg{font-size:12px;color:var(--good);margin-left:4px;align-self:center;}
+
+  .grand-total{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+    font-size:14px;
+  }
+  .grand-total .label{color:var(--ink-dim);text-transform:uppercase;letter-spacing:0.5px;font-size:12px;}
+  .grand-total .value{font-family:var(--mono);font-size:20px;color:var(--accent);font-weight:700;}
+  #total-table .rincian{color:var(--ink-dim);font-size:12px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Katalog Harga <span>&amp; Order</span></h1>
+  <p>Daftar harga Plevia jaket celana, poncho — buat orderan langsung dari sini. `bensahar666 2026</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-view="katalog">Katalog Harga</div>
+  <div class="tab" data-view="order">Buat Orderan</div>
+</div>
+
+<main>
+
+  <!-- KATALOG VIEW -->
+  <div class="view active" id="view-katalog">
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="Cari nama item atau kode...">
+    </div>
+    <div id="katalog-container"></div>
+  </div>
+
+  <!-- ORDER VIEW -->
+  <div class="view" id="view-order">
+
+    <div class="card">
+      <h3>Info Order</h3>
+      <div class="row">
+        <div class="field">
+          <label>Tanggal</label>
+          <input type="date" id="order-date">
+        </div>
+        <div class="field">
+          <label>Nama Toko</label>
+          <input type="text" id="order-toko" list="toko-list" placeholder="Ketik atau pilih nama toko" autocomplete="off">
+          <datalist id="toko-list"></datalist>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Pembayaran</label>
+          <select id="order-payment">
+            <option value="cd">CD</option>
+            <option value="tempo">Tempo</option>
+          </select>
+        </div>
+        <div class="field" id="tempo-field" style="display:none;">
+          <label>Tempo (hari)</label>
+          <input type="text" id="order-tempo-days" placeholder="Contoh: 30 hari">
+        </div>
+        <div class="field">
+          <label>Faktur Pajak</label>
+          <select id="order-fp">
+            <option value="">Kosong</option>
+            <option value="fp">(fp)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Tambah Item</h3>
+      <div class="item-picker">
+        <select id="picker-item"></select>
+        <input type="number" id="picker-qty" min="1" value="1" placeholder="Koli">
+        <button id="picker-add">+ Tambah</button>
+      </div>
+      <ul class="order-list" id="order-items-list"></ul>
+      <div class="empty-note" id="empty-note">Belum ada item ditambahkan.</div>
+    </div>
+
+    <div class="card">
+      <h3>Hasil Format Orderan</h3>
+      <div class="output-box" id="output-box">—</div>
+      <div class="actions">
+        <button class="btn btn-primary" id="copy-btn">Salin Teks</button>
+        <button class="btn btn-ghost" id="reset-btn">Reset Orderan</button>
+        <span class="copied-msg" id="copied-msg" style="display:none;">Tersalin ✓</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Total Harga Barang</h3>
+      <table id="total-table">
+        <thead><tr>
+          <th style="width:70px;">Kode</th>
+          <th>Nama Item</th>
+          <th style="width:140px;">Harga/Koli</th>
+          <th style="width:60px;">Isi</th>
+          <th style="width:60px;">Koli</th>
+          <th style="width:170px;">Total</th>
+        </tr></thead>
+        <tbody id="total-tbody"></tbody>
+      </table>
+      <div class="empty-note" id="total-empty-note">Belum ada item ditambahkan.</div>
+      <div class="grand-total" id="grand-total"></div>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+/* ================= DATA KATALOG ================= */
+/* group: kelompok pemisah baris kosong pada sumber data */
+const DATA = [
+  {g:1, no:1, kode:'100', nama:'JC NEKO JUNIOR', harga:571000, satuan:47583, isi:5},
+  {g:1, no:2, kode:'120', nama:'PC BEST KIDS', harga:585000, satuan:48750, isi:12},
+  {g:1, no:3, kode:'130', nama:'JC SUPERKIDS BP', harga:740000, satuan:61667, isi:8},
+  {g:1, no:4, kode:'150', nama:'RC BUBBLE BEAM', new:true, harga:465000, satuan:38750, isi:5},
+  {g:1, no:5, kode:'170', nama:'JUMPSUIT URANUS', new:true, harga:628000, satuan:52333, isi:8},
+  {g:1, no:6, kode:'727', nama:'JC REMAJA TRISTAR', harga:835000, satuan:69583, isi:8},
+
+  {g:2, no:7, kode:'300', nama:'JC CARBON', harga:975000, satuan:81250, isi:8},
+  {g:2, no:8, kode:'502', nama:'JC NEW ANDALAN', new:true, harga:616000, satuan:51333, isi:8},
+  {g:2, no:9, kode:'513', nama:'JC STORMBREAKER XL', harga:985000, satuan:82083, isi:6},
+  {g:2, no:10, kode:'612', nama:'JC SPORTLITE', harga:790000, satuan:65833, isi:8},
+  {g:2, no:11, kode:'700B', nama:'JC DIAMOND BENING', harga:943500, satuan:78625, isi:8},
+  {g:2, no:12, kode:'700', nama:'JC DIAMOND WARNA', harga:943500, satuan:78625, isi:8},
+  {g:2, no:13, kode:'711', nama:'JC KOMB PREMIUM', harga:740000, satuan:61667, isi:8},
+  {g:2, no:14, kode:'725', nama:'JC GRAND', harga:740000, satuan:61667, isi:8},
+  {g:2, no:15, kode:'739', nama:'JC CAPTAIN', new:true, harga:940000, satuan:78333, isi:6},
+  {g:2, no:16, kode:'755', nama:'JC INFINITY', harga:930000, satuan:77500, isi:8},
+  {g:2, no:17, kode:'757', nama:'JC NUSANTARA', new:true, harga:898000, satuan:74833, isi:6},
+  {g:2, no:18, kode:'758', nama:'JC ANDARA', harga:961000, satuan:80083, isi:8},
+  {g:2, no:19, kode:'811', nama:'JC RUSH', harga:895000, satuan:74583, isi:8},
+  {g:2, no:20, kode:'813', nama:'JC ARMY', harga:980000, satuan:81667, isi:8},
+
+  {g:3, no:21, kode:'7271', nama:'JC TRISTAR BACKPACK', harga:888000, satuan:74000, isi:6},
+  {g:3, no:22, kode:'7001', nama:'JC DIAMOND ADV B (BP)', harga:1050000, satuan:87500, isi:6},
+  {g:3, no:23, kode:'7001W', nama:'JC DIAMOND ADV W (BP)', harga:1050000, satuan:87500, isi:6},
+  {g:3, no:24, kode:'8100', nama:'JC POP BP', harga:1235000, satuan:102917, isi:6},
+
+  {g:4, no:25, kode:'505', nama:'PL EASY', new:true, harga:300000, satuan:25000, isi:15},
+  {g:4, no:26, kode:'520', nama:'PL BEFRIEND', new:true, harga:480000, satuan:40000, isi:6},
+  {g:4, no:27, kode:'705', nama:'PL DIAMOND', harga:782000, satuan:65167, isi:8},
+  {g:4, no:28, kode:'730', nama:'PL SCARLET', new:true, harga:935000, satuan:77917, isi:8},
+
+  {g:5, no:29, kode:'500', nama:'PLC GANENDRA', new:true, harga:450000, satuan:37500, isi:5},
+  {g:5, no:30, kode:'734', nama:'PLC NAUTILUS', harga:898000, satuan:74833, isi:8},
+  {g:5, no:31, kode:'735T', nama:'PLC TRISTAR', harga:750000, satuan:62500, isi:8},
+
+  {g:6, no:32, kode:'753', nama:'GAMIS SALSABILA', harga:998000, satuan:83167, isi:8},
+  {g:6, no:33, kode:'870', nama:'JR POP', harga:1208000, satuan:100667, isi:12},
+  {g:6, no:34, kode:'728', nama:'JR RAINA BP', new:true, harga:970500, satuan:80875, isi:4},
+];
+
+const fmtRp = n => 'Rp ' + n.toLocaleString('id-ID');
+
+/* ================= DATABASE TOKO ================= */
+const TOKO_LIST = [
+  'AGUNG','ANAK PERTAMA','ANUGERAH KARYA MANDIRI','ANNAFI COLLECTION','BARU',
+  'BIKHOIR / DISTRIBUTOR ACC','BINTANG TIMUR','BUMI PUTERA','BUSANA','CEMARA',
+  'CV ANUGERAH KASIH KARUNIA','CV FAJAR KARYA PRIMA','CV FAJAR NUSANTARA JAYA',
+  'CV INDOPRIMERA','CV NIAGA JAYA MAKMUR S','EMPIRE / CV ARTHA MANDIRI',
+  'ESBE (SATRIA BARU)','FAMILY ATK','GIYANTO','JAYA PUTRA','JAYA SETIA','KHALID',
+  'KURNIA PLASTIK','LANGGENG','LANGGENG MAKMUR','LARIS','MAJU HOMEWARE',
+  'MAJU JAYA / BUSANA','MAJU JAYA','MANTEP','MATARAM','MEGAH MAS','MEGARIA',
+  'MERAPI FASHION','MERDEKA','METRO KAMPUS','MITRA SWALAYAN','MITRA MAJU',
+  'MOORMILES','MURAH JAYA','NAGA MAS','NEYYASHOP','PERMAI','PIKA GROSIR',
+  'PT PANTALI BERKAH SENTOSA','PT SEKAWAN KARUNIA JAYA','PT WARNA ASLI JAYA',
+  'PUTRA DADI SEJAHTERA','PUTRA SATRIA','PUTRI TUNGGAL','PUSAKA','REJEKI',
+  'RUKUN JAYA','SAERAH','SANDITAMA','SARI REJEKI','SEMOGA JAYA','SINAR ATOM',
+  'SINAR BARU','SINAR JAYA','SINAR SURYA','SL GROSIR','SUMBER BANGUN JAYA G',
+  'SUMBER REJEKI','SUNGKONO SUSILO','SURYA','TIARA ATK','TIFA JAYA','TOKO RICKY',
+  'TOKO SAUDARA','TUNGGAL JAYA','ULTIMA','WARNA WARNI','CANDI JAYA','CV MAXI RAYA',
+  'ISTANA INDAH','JAYA BARU (LSK)','MAJU BERSAMA','MEI CU','SUMATRA JAYA',
+  'UD JUNAIDI','VICTORY HOUSEWARE','WINNI GROSIR'
+];
+
+/* ================= TABS ================= */
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-'+tab.dataset.view).classList.add('active');
+  });
+});
+
+/* ================= KATALOG RENDER ================= */
+function renderKatalog(filter=''){
+  const container = document.getElementById('katalog-container');
+  container.innerHTML = '';
+  const f = filter.trim().toLowerCase();
+  let currentGroup = null;
+  let anyRow = false;
+
+  DATA.forEach(item=>{
+    const matches = !f || item.nama.toLowerCase().includes(f) || item.kode.toLowerCase().includes(f);
+    if(!matches) return;
+    anyRow = true;
+
+    if(item.g !== currentGroup){
+      currentGroup = item.g;
+      const label = document.createElement('div');
+      label.className = 'kelompok-label';
+      label.textContent = 'Kelompok ' + currentGroup;
+      container.appendChild(label);
+
+      const table = document.createElement('table');
+      table.dataset.group = currentGroup;
+      table.innerHTML = `<thead><tr>
+        <th style="width:36px;">No</th>
+        <th style="width:70px;">Kode</th>
+        <th>Nama Item</th>
+        <th style="width:110px;">Harga/Koli</th>
+        <th style="width:100px;">Harga/Pcs</th>
+        <th style="width:50px;">Isi</th>
+        <th style="width:36px;"></th>
+      </tr></thead><tbody></tbody>`;
+      container.appendChild(table);
+    }
+
+    const tbody = container.querySelector(`table[data-group="${currentGroup}"] tbody`);
+    const tr = document.createElement('tr');
+    tr.className = 'item-row';
+    tr.innerHTML = `
+      <td>${item.no}</td>
+      <td class="kode">${item.kode}</td>
+      <td class="nama">${item.nama}${item.new ? '<span class="badge-new">NEW</span>' : ''}</td>
+      <td class="harga">${fmtRp(item.harga)}</td>
+      <td class="harga-satuan">${fmtRp(item.satuan)}</td>
+      <td class="isi">${item.isi}</td>
+      <td><button class="add-btn" data-kode="${item.kode}" title="Tambah ke orderan">+</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if(!anyRow){
+    container.innerHTML = '<div class="empty-note">Tidak ada item yang cocok dengan pencarian.</div>';
+  }
+
+  container.querySelectorAll('.add-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      addOrderItem(btn.dataset.kode, 1);
+      document.querySelector('.tab[data-view="order"]').click();
+    });
+  });
+}
+renderKatalog();
+
+document.getElementById('search').addEventListener('input', e=>{
+  renderKatalog(e.target.value);
+});
+
+/* ================= TOKO DATALIST ================= */
+const tokoDatalist = document.getElementById('toko-list');
+TOKO_LIST.forEach(nama=>{
+  const opt = document.createElement('option');
+  opt.value = nama;
+  tokoDatalist.appendChild(opt);
+});
+
+/* ================= ORDER PICKER ================= */
+const pickerSelect = document.getElementById('picker-item');
+DATA.forEach(item=>{
+  const opt = document.createElement('option');
+  opt.value = item.kode;
+  opt.textContent = `${item.kode} — ${item.nama}`;
+  pickerSelect.appendChild(opt);
+});
+
+document.getElementById('picker-add').addEventListener('click', ()=>{
+  const kode = pickerSelect.value;
+  const qty = parseInt(document.getElementById('picker-qty').value) || 1;
+  addOrderItem(kode, qty);
+});
+
+/* ================= ORDER STATE ================= */
+let orderItems = []; // {kode, nama, qty}
+
+function addOrderItem(kode, qty){
+  const master = DATA.find(d=>d.kode===kode);
+  if(!master) return;
+  const existing = orderItems.find(o=>o.kode===kode);
+  if(existing){
+    existing.qty += qty;
+  } else {
+    orderItems.push({kode: master.kode, nama: master.nama, qty});
+  }
+  renderOrderList();
+  updateOutput();
+}
+
+function removeOrderItem(kode){
+  orderItems = orderItems.filter(o=>o.kode!==kode);
+  renderOrderList();
+  updateOutput();
+}
+
+function renderOrderList(){
+  const list = document.getElementById('order-items-list');
+  const emptyNote = document.getElementById('empty-note');
+  list.innerHTML = '';
+  if(orderItems.length===0){
+    emptyNote.style.display='block';
+    return;
+  }
+  emptyNote.style.display='none';
+  orderItems.forEach(o=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="oi-text">${o.kode} ${o.nama} : ${o.qty} koli</span>
+      <button data-kode="${o.kode}">Hapus</button>`;
+    list.appendChild(li);
+  });
+  list.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>removeOrderItem(btn.dataset.kode));
+  });
+}
+
+/* ================= FORMAT OUTPUT ================= */
+const HARI_ID = ['Minggu','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'];
+
+function formatTanggal(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  const hari = HARI_ID[d.getDay()];
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return `${hari}, ${dd}-${mm}-${yyyy}`;
+}
+
+function updateOutput(){
+  renderTotalTable();
+  const dateStr = document.getElementById('order-date').value;
+  const toko = document.getElementById('order-toko').value.trim();
+  const payment = document.getElementById('order-payment').value;
+  const tempoDays = document.getElementById('order-tempo-days').value.trim();
+  const fp = document.getElementById('order-fp').value;
+
+  const out = document.getElementById('output-box');
+
+  if(!dateStr && !toko && orderItems.length===0){
+    out.textContent = '—';
+    return;
+  }
+
+  const tanggalLine = dateStr ? formatTanggal(dateStr) : '[pilih tanggal]';
+  const tokoLine = toko || '[nama toko]';
+
+  let paymentLabel = payment === 'tempo'
+    ? (tempoDays ? `tempo ${tempoDays}` : 'tempo')
+    : 'cd';
+  let discLine = `disc reg/${paymentLabel}`;
+  if(fp) discLine += ` / (fp)`;
+
+  const itemLines = orderItems.map(o=>`-${o.kode} ${o.nama} : ${o.qty} koli`).join('\n');
+
+  const lines = [
+    tanggalLine,
+    tokoLine,
+    discLine,
+    '',
+    itemLines || '-[belum ada item]',
+    '',
+    'Dikirim segera'
+  ];
+
+  out.textContent = lines.join('\n');
+}
+
+function renderTotalTable(){
+  const tbody = document.getElementById('total-tbody');
+  const emptyNote = document.getElementById('total-empty-note');
+  const grandTotalEl = document.getElementById('grand-total');
+  const table = document.getElementById('total-table');
+  tbody.innerHTML = '';
+
+  if(orderItems.length===0){
+    emptyNote.style.display = 'block';
+    table.style.display = 'none';
+    grandTotalEl.innerHTML = '';
+    return;
+  }
+  emptyNote.style.display = 'none';
+  table.style.display = 'table';
+
+  let grandTotal = 0;
+  orderItems.forEach(o=>{
+    const master = DATA.find(d=>d.kode===o.kode);
+    if(!master) return;
+    const totalKoli = master.harga * master.isi;   // harga 1 koli = harga/koli x isi
+    const totalItem = totalKoli * o.qty;           // dikali jumlah koli yang dipesan
+    grandTotal += totalItem;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="kode">${o.kode}</td>
+      <td class="nama">${o.nama}</td>
+      <td class="harga">${fmtRp(master.harga)}</td>
+      <td class="isi">${master.isi}</td>
+      <td class="isi">${o.qty}</td>
+      <td class="harga rincian">${fmtRp(master.harga)} × ${master.isi}${o.qty>1 ? ' × '+o.qty : ''} = <strong style="color:var(--ink);font-family:inherit;">${fmtRp(totalItem)}</strong></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  grandTotalEl.innerHTML = `<span class="label">Total Keseluruhan</span><span class="value">${fmtRp(grandTotal)}</span>`;
+}
+
+['order-date','order-toko','order-payment','order-tempo-days','order-fp'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', updateOutput);
+  document.getElementById(id).addEventListener('change', updateOutput);
+});
+
+document.getElementById('order-payment').addEventListener('change', e=>{
+  document.getElementById('tempo-field').style.display = e.target.value==='tempo' ? 'flex' : 'none';
+  updateOutput();
+});
+
+/* default tanggal = hari ini */
+(function setToday(){
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  document.getElementById('order-date').value = `${yyyy}-${mm}-${dd}`;
+  updateOutput();
+})();
+
+/* ================= COPY & RESET ================= */
+document.getElementById('copy-btn').addEventListener('click', ()=>{
+  const text = document.getElementById('output-box').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const msg = document.getElementById('copied-msg');
+    msg.style.display = 'inline';
+    setTimeout(()=>msg.style.display='none', 1800);
+  });
+});
+
+document.getElementById('reset-btn').addEventListener('click', ()=>{
+  orderItems = [];
+  document.getElementById('order-toko').value = '';
+  document.getElementById('order-tempo-days').value = '';
+  document.getElementById('order-fp').value = '';
+  document.getElementById('order-payment').value = 'cd';
+  document.getElementById('tempo-field').style.display = 'none';
+  renderOrderList();
+  updateOutput();
+});
+</script>
+
+</body>
+</html>
