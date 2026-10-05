@@ -725,10 +725,15 @@ document.getElementById('save-btn').addEventListener('click', async ()=>{
   const teksFormat = document.getElementById('output-box').textContent;
 
   try {
+    // Buat ID order di browser dulu, supaya tidak perlu baca-balik (SELECT)
+    // ke database setelah insert -- publik memang sengaja tidak diizinkan SELECT.
+    const orderId = crypto.randomUUID();
+
     // 1. insert header order
-    const { data: orderRow, error: orderErr } = await supabaseClient
+    const { error: orderErr } = await supabaseClient
       .from('orders')
       .insert({
+        id: orderId,
         tanggal: dateStr,
         hari: hari,
         nama_toko: toko,
@@ -739,9 +744,7 @@ document.getElementById('save-btn').addEventListener('click', async ()=>{
         total_harga: grandTotal,
         teks_format: teksFormat,
         status: 'baru'
-      })
-      .select()
-      .single();
+      });
 
     if(orderErr) throw orderErr;
 
@@ -749,7 +752,7 @@ document.getElementById('save-btn').addEventListener('click', async ()=>{
     const itemsPayload = orderItems.map(o=>{
       const master = DATA.find(d=>d.kode===o.kode);
       return {
-        order_id: orderRow.id,
+        order_id: orderId,
         kode: o.kode,
         nama_item: o.nama,
         qty_koli: o.qty,
