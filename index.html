@@ -12,8 +12,8 @@
     --line:#2b373c;
     --ink:#eef3f2;
     --ink-dim:#9fb0b3;
-    --accent:#3ae7ff;
-    --accent-dim:#9ef4fd;
+    --accent:#ff8a3d;
+    --accent-dim:#c96a2e;
     --good:#5fd08a;
     --mono: "SF Mono", "Roboto Mono", Consolas, monospace;
   }
@@ -211,9 +211,12 @@
     cursor:pointer;
   }
   .btn-primary{background:var(--accent);color:#1a2226;}
+  .btn-save{background:var(--good);color:#0c1113;}
+  .btn-save:disabled{opacity:0.6;cursor:default;}
   .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
   .btn-ghost:hover{border-color:var(--accent-dim);}
   .copied-msg{font-size:12px;color:var(--good);margin-left:4px;align-self:center;}
+  .save-msg-error{color:#e05d5d !important;}
 
   .grand-total{
     display:flex;
@@ -305,8 +308,10 @@
       <div class="output-box" id="output-box">—</div>
       <div class="actions">
         <button class="btn btn-primary" id="copy-btn">Salin Teks</button>
+        <button class="btn btn-save" id="save-btn">Simpan ke Database</button>
         <button class="btn btn-ghost" id="reset-btn">Reset Orderan</button>
         <span class="copied-msg" id="copied-msg" style="display:none;">Tersalin ✓</span>
+        <span class="copied-msg" id="save-msg" style="display:none;"></span>
       </div>
     </div>
 
@@ -331,23 +336,30 @@
 
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
+
+/* ================= SUPABASE CONFIG ================= */
+const SUPABASE_URL = 'https://glhzfgauastmbofqtrsw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsaHpmZ2F1YXN0bWJvZnF0cnN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExNDYwNDIsImV4cCI6MjEwNjcyMjA0Mn0.iwa8_l9MYpWK8iCpO6J5iBFpXkVJUv9qmz_Aly8_qjI';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 /* ================= DATA KATALOG ================= */
 /* group: kelompok pemisah baris kosong pada sumber data */
 const DATA = [
-  {g:1, no:1, kode:'100', nama:'JC NEKO ', harga:571000, satuan:47583, isi:5},
+  {g:1, no:1, kode:'100', nama:'JC NEKO JUNIOR', harga:571000, satuan:47583, isi:5},
   {g:1, no:2, kode:'120', nama:'BEST KIDS', harga:585000, satuan:48750, isi:12},
   {g:1, no:3, kode:'130', nama:'JC SUPERKIDS BP', harga:740000, satuan:61667, isi:8},
-  {g:1, no:4, kode:'150', nama:'BUBBLE BEAM', new:true, harga:465000, satuan:38750, isi:5},
+  {g:1, no:4, kode:'150', nama:'RC BUBBLE BEAM', new:true, harga:465000, satuan:38750, isi:5},
   {g:1, no:5, kode:'170', nama:'URANUS', new:true, harga:628000, satuan:52333, isi:8},
-  {g:1, no:6, kode:'727', nama:'JC TRISTAR', harga:835000, satuan:69583, isi:8},
+  {g:1, no:6, kode:'727', nama:'JC REMAJA TRISTAR', harga:835000, satuan:69583, isi:8},
 
   {g:2, no:7, kode:'300', nama:'JC CARBON', harga:975000, satuan:81250, isi:8},
   {g:2, no:8, kode:'502', nama:'JC NEW ANDALAN', new:true, harga:616000, satuan:51333, isi:8},
-  {g:2, no:9, kode:'513', nama:'JC STORMBREAKER XL', harga:985000, satuan:82083, isi:6},
+  {g:2, no:9, kode:'513', nama:'JC STORMBREAKER', harga:985000, satuan:82083, isi:6},
   {g:2, no:10, kode:'612', nama:'JC SPORTLITE', harga:790000, satuan:65833, isi:8},
   {g:2, no:11, kode:'700B', nama:'JC DIAMOND BENING', harga:943500, satuan:78625, isi:8},
-  {g:2, no:12, kode:'700', nama:'JC DIAMOND W', harga:943500, satuan:78625, isi:8},
+  {g:2, no:12, kode:'700', nama:'JC DIAMOND WARNA', harga:943500, satuan:78625, isi:8},
   {g:2, no:13, kode:'711', nama:'JC KOMB PREMIUM', harga:740000, satuan:61667, isi:8},
   {g:2, no:14, kode:'725', nama:'JC GRAND', harga:740000, satuan:61667, isi:8},
   {g:2, no:15, kode:'739', nama:'JC CAPTAIN', new:true, harga:940000, satuan:78333, isi:6},
@@ -357,10 +369,10 @@ const DATA = [
   {g:2, no:19, kode:'811', nama:'JC RUSH', harga:895000, satuan:74583, isi:8},
   {g:2, no:20, kode:'813', nama:'JC ARMY', harga:980000, satuan:81667, isi:8},
 
-  {g:3, no:21, kode:'7271', nama:'JC TRISTAR BACKPACK', harga:888000, satuan:74000, isi:6},
+  {g:3, no:21, kode:'7271', nama:'JC TRISTAR BP', harga:888000, satuan:74000, isi:6},
   {g:3, no:22, kode:'7001', nama:'JC DIAMOND ADV B (BP)', harga:1050000, satuan:87500, isi:6},
   {g:3, no:23, kode:'7001W', nama:'JC DIAMOND ADV W (BP)', harga:1050000, satuan:87500, isi:6},
-  {g:3, no:24, kode:'8100', nama:'JC POP BP', harga:1235000, satuan:102917, isi:6},
+  {g:3, no:24, kode:'8100', nama:'JC CELANA POP BP', harga:1235000, satuan:102917, isi:6},
 
   {g:4, no:25, kode:'505', nama:'PL EASY', new:true, harga:300000, satuan:25000, isi:15},
   {g:4, no:26, kode:'520', nama:'PL BEFRIEND', new:true, harga:480000, satuan:40000, isi:6},
@@ -383,20 +395,20 @@ const TOKO_LIST = [
   'AGUNG','ANAK PERTAMA','ANUGERAH KARYA MANDIRI','ANNAFI COLLECTION','BARU',
   'BIKHOIR / DISTRIBUTOR ACC','BINTANG TIMUR','BUMI PUTERA','BUSANA','CEMARA',
   'CV ANUGERAH KASIH KARUNIA','CV FAJAR KARYA PRIMA','CV FAJAR NUSANTARA JAYA',
-  'AIKO','CV NIAGA JAYA','EMPIRE / CV ARTHA MANDIRI',
+  'AIKO','CV NIAGA JAYA MAKMUR S','EMPIRE / CV ARTHA MANDIRI',
   'ESBE (SATRIA BARU)','FAMILY ATK','GIYANTO','JAYA PUTRA','JAYA SETIA','KHALID',
   'KURNIA PLASTIK','LANGGENG','LANGGENG MAKMUR','LARIS','MAJU HOMEWARE',
-  'MAJU JAYA / BUSANA','MAJU JAYA','MANTEP','MATARAM','MEGAH MAS','MEGARIA',
+  'MAJU JAYA / BUSANA','MAJU JAYA','MANTEP','43','MEGAH MAS','MEGARIA',
   'MERAPI FASHION','MERDEKA','METRO KAMPUS','MITRA SWALAYAN','MITRA MAJU',
   'MOORMILES','MURAH JAYA','NAGA MAS','NEYYASHOP','PERMAI','PIKA GROSIR',
   'PT PANTALI BERKAH SENTOSA','PT SEKAWAN KARUNIA JAYA','PT WARNA ASLI JAYA',
   'PUTRA DADI SEJAHTERA','PUTRA SATRIA','PUTRI TUNGGAL','PUSAKA','REJEKI',
-  'RUKUN JAYA','SAERAH','SANDITAMA','SARI REJEKI','SEMOGA JAYA','SINAR ATOM',
+  'RUKUN JAYA','SAERAH','SANDITAMA','SARI REJEKI','SARI WARAS','SINAR ATOM',
   'SINAR BARU','SINAR JAYA','SINAR SURYA','SL GROSIR','SUMBER BANGUN JAYA G',
-  'SUMBER REJEKI','SUNGKONO','SURYA','TIARA ATK','TIFA JAYA','TOKO RICKY',
+  'SUMBER REJEKI','SUNGKONO SUSILO','SURYA','TIARA ATK','TIFA JAYA','TOKO RICKY',
   'TOKO SAUDARA','TUNGGAL JAYA','ULTIMA','WARNA WARNI','CANDI JAYA','CV MAXI RAYA',
   'ISTANA INDAH','JAYA BARU (LSK)','MAJU BERSAMA','MEI CU','SUMATRA JAYA',
-  'UD JUNAIDI','VICTORY HOUSEWARE','WINNI GROSIR','MAHKOTA PUTRA','MULIA','PRABOT MAMA',
+  'UD JUNAIDI','VICTORY HOUSEWARE','WINNI GROSIR','PRABOT MAMA','MAHKOTA PUTRA'
 ];
 
 /* ================= TABS ================= */
@@ -500,6 +512,7 @@ document.getElementById('picker-add').addEventListener('click', ()=>{
 
 /* ================= ORDER STATE ================= */
 let orderItems = []; // {kode, nama, qty}
+let grandTotal = 0;  // dihitung ulang tiap renderTotalTable()
 
 function addOrderItem(kode, qty){
   const master = DATA.find(d=>d.kode===kode);
@@ -610,7 +623,7 @@ function renderTotalTable(){
   emptyNote.style.display = 'none';
   table.style.display = 'table';
 
-  let grandTotal = 0;
+  grandTotal = 0;
   orderItems.forEach(o=>{
     const master = DATA.find(d=>d.kode===o.kode);
     if(!master) return;
@@ -672,6 +685,95 @@ document.getElementById('reset-btn').addEventListener('click', ()=>{
   document.getElementById('tempo-field').style.display = 'none';
   renderOrderList();
   updateOutput();
+});
+
+/* ================= SIMPAN KE SUPABASE ================= */
+function showSaveMsg(text, isError){
+  const el = document.getElementById('save-msg');
+  el.textContent = text;
+  el.style.display = 'inline';
+  el.classList.toggle('save-msg-error', !!isError);
+  if(!isError){
+    setTimeout(()=>{ el.style.display='none'; }, 3000);
+  }
+}
+
+document.getElementById('save-btn').addEventListener('click', async ()=>{
+  const dateStr = document.getElementById('order-date').value;
+  const toko = document.getElementById('order-toko').value.trim();
+  const payment = document.getElementById('order-payment').value;
+  const tempoDays = document.getElementById('order-tempo-days').value.trim();
+  const fp = document.getElementById('order-fp').value === 'fp';
+
+  if(!dateStr || !toko){
+    showSaveMsg('Isi tanggal dan nama toko dulu', true);
+    return;
+  }
+  if(orderItems.length === 0){
+    showSaveMsg('Belum ada item di orderan', true);
+    return;
+  }
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Menyimpan...';
+  document.getElementById('save-msg').style.display = 'none';
+
+  const totalKoli = orderItems.reduce((sum,o)=>sum + o.qty, 0);
+  const d = new Date(dateStr + 'T00:00:00');
+  const hari = HARI_ID[d.getDay()];
+  const teksFormat = document.getElementById('output-box').textContent;
+
+  try {
+    // 1. insert header order
+    const { data: orderRow, error: orderErr } = await supabaseClient
+      .from('orders')
+      .insert({
+        tanggal: dateStr,
+        hari: hari,
+        nama_toko: toko,
+        pembayaran: payment,
+        tempo_hari: payment === 'tempo' ? (tempoDays || null) : null,
+        fp: fp,
+        total_koli: totalKoli,
+        total_harga: grandTotal,
+        teks_format: teksFormat,
+        status: 'baru'
+      })
+      .select()
+      .single();
+
+    if(orderErr) throw orderErr;
+
+    // 2. insert rincian item, terhubung ke order_id
+    const itemsPayload = orderItems.map(o=>{
+      const master = DATA.find(d=>d.kode===o.kode);
+      return {
+        order_id: orderRow.id,
+        kode: o.kode,
+        nama_item: o.nama,
+        qty_koli: o.qty,
+        harga_per_koli: master.harga,
+        isi_per_koli: master.isi,
+        subtotal: master.harga * master.isi * o.qty
+      };
+    });
+
+    const { error: itemsErr } = await supabaseClient
+      .from('order_items')
+      .insert(itemsPayload);
+
+    if(itemsErr) throw itemsErr;
+
+    showSaveMsg('Tersimpan ✓', false);
+
+  } catch(err){
+    console.error(err);
+    showSaveMsg('Gagal menyimpan: ' + (err.message || 'cek koneksi/konfigurasi'), true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Simpan ke Database';
+  }
 });
 </script>
 
